@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <title>Norway Cup 2026 Planlegger</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 40px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    input, select { padding: 4px; margin: 2px; }
+    button { margin: 5px; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h1>Norway Cup 2026 Planlegger</h1>
+
+  <h2>Hotellkalkulator</h2>
+  <table id="hotelTable">
+    <tr><th>Romtype</th><th>Antall rom</th><th>Pris per natt</th><th>Netter</th><th>Total</th></tr>
+    <tr>
+      <td>Trippelrom</td>
+      <td><input type="number" value="8" onchange="updateHotel()"></td>
+      <td><input type="number" value="1500" onchange="updateHotel()"></td>
+      <td><input type="number" value="7" onchange="updateHotel()"></td>
+      <td class="total">0</td>
+    </tr>
+    <tr>
+      <td>Dobbeltrom</td>
+      <td><input type="number" value="2" onchange="updateHotel()"></td>
+      <td><input type="number" value="1200" onchange="updateHotel()"></td>
+      <td><input type="number" value="7" onchange="updateHotel()"></td>
+      <td class="total">0</td>
+    </tr>
+  </table>
+  <div><strong>Totalt hotellkostnad:</strong> <span id="hotelTotal">0</span> NOK</div>
+
+  <h2>Utgifter</h2>
+  <table id="expensesTable">
+    <tr><th>Type</th><th>Beløp</th><th></th></tr>
+    <tr><td>Transport</td><td><input type="number" value="20000" onchange="updateSummary()"></td><td></td></tr>
+    <tr><td>Utstyr</td><td><input type="number" value="10000" onchange="updateSummary()"></td><td></td></tr>
+    <tr><td>Diverse</td><td><input type="number" value="5000" onchange="updateSummary()"></td><td></td></tr>
+  </table>
+  <button onclick="addExpense()">Legg til utgift</button>
+
+  <h2>Inntekter</h2>
+  <table id="incomeTable">
+    <tr><th>Type</th><th>Beløp</th><th></th></tr>
+    <tr><td>Sponsorer</td><td><input type="number" value="15000" onchange="updateSummary()"></td><td></td></tr>
+    <tr><td>Dugnad</td><td><input type="number" value="10000" onchange="updateSummary()"></td><td></td></tr>
+  </table>
+  <button onclick="addIncome()">Legg til inntekt</button>
+
+  <h2>Spillerliste</h2>
+  <ul id="playerList"></ul>
+  <input type="text" id="playerName" placeholder="Spillernavn">
+  <button onclick="addPlayer()">Legg til spiller</button>
+
+  <h2>Trenerliste</h2>
+  <ul id="coachList"></ul>
+  <input type="text" id="coachName" placeholder="Trenernavn">
+  <button onclick="addCoach()">Legg til trener</button>
+
+  <h2>Romfordeling Spillere</h2>
+  <div id="playerRooms"></div>
+  <button onclick="addPlayerRoom()">Legg til spillerrom</button>
+
+  <h2>Romfordeling Trenere</h2>
+  <div id="coachRooms"></div>
+  <button onclick="addCoachRoom()">Legg til trenerrom</button>
+
+  <h2>Oppsummering</h2>
+  <div id="summary"></div>
+
+  <button onclick="saveData()">Lagre oppsett</button>
+  <button onclick="loadData()">Hent lagret oppsett</button>
+
+  <script>
+    function updateHotel() {
+      let rows = document.querySelectorAll("#hotelTable tr");
+      let total = 0;
+      rows.forEach((row, i) => {
+        if (i === 0) return;
+        let cells = row.querySelectorAll("td");
+        let count = parseInt(cells[1].querySelector("input").value);
+        let price = parseInt(cells[2].querySelector("input").value);
+        let nights = parseInt(cells[3].querySelector("input").value);
+        let sum = count * price * nights;
+        cells[4].textContent = sum;
+        total += sum;
+      });
+      document.getElementById("hotelTotal").textContent = total;
+      updateSummary();
+    }
+
+    function addExpense() {
+      let table = document.getElementById("expensesTable");
+      let row = table.insertRow();
+      row.innerHTML = '<td><input type="text"></td><td><input type="number" value="0" onchange="updateSummary()"></td><td><button onclick="this.parentElement.parentElement.remove(); updateSummary()">Fjern</button></td>';
+    }
+
+    function addIncome() {
+      let table = document.getElementById("incomeTable");
+      let row = table.insertRow();
+      row.innerHTML = '<td><input type="text"></td><td><input type="number" value="0" onchange="updateSummary()"></td><td><button onclick="this.parentElement.parentElement.remove(); updateSummary()">Fjern</button></td>';
+    }
+
+    function updateSummary() {
+      let hotelTotal = parseInt(document.getElementById("hotelTotal").textContent);
+      let expenseInputs = document.querySelectorAll("#expensesTable input[type='number']");
+      let incomeInputs = document.querySelectorAll("#incomeTable input[type='number']");
+      let expenses = hotelTotal;
+      expenseInputs.forEach(e => expenses += parseInt(e.value));
+      let income = 0;
+      incomeInputs.forEach(i => income += parseInt(i.value));
+      let net = expenses - income;
+      let players = document.querySelectorAll("#playerList li").length;
+      let coaches = document.querySelectorAll("#coachList li").length;
+      let totalPeople = players + coaches;
+      let perPerson = totalPeople > 0 ? Math.round(net / totalPeople) : 0;
+      let perPlayer = players > 0 ? Math.round(net / players) : 0;
+      document.getElementById("summary").innerHTML =
+        `<p>Totale utgifter: ${expenses} NOK</p>
+         <p>Totale inntekter: ${income} NOK</p>
+         <p>Netto kostnad: ${net} NOK</p>
+         <p>Kostnad per person (spillere + trenere): ${perPerson} NOK</p>
+         <p>Kostnad per spiller (kun spillere betaler): ${perPlayer} NOK</p>`;
+    }
+
+    function addPlayer() {
+      let name = document.getElementById("playerName").value;
+      if (name) {
+        let li = document.createElement("li");
+        li.textContent = name;
+        document.getElementById("playerList").appendChild(li);
+        document.getElementById("playerName").value = "";
+        updateSummary();
+      }
+    }
+
+    function addCoach() {
+      let name = document.getElementById("coachName").value;
+      if (name) {
+        let li = document.createElement("li");
+        li.textContent = name;
+        document.getElementById("coachList").appendChild(li);
+        document.getElementById("coachName").value = "";
+        updateSummary();
+      }
+    }
+
+    function addPlayerRoom() {
+      let div = document.createElement("div");
+      let players = Array.from(document.querySelectorAll("#playerList li")).map(li => li.textContent);
+      div.innerHTML = `<p>Spillerrom:</p>` + players.map(p => `<select><option>${p}</option></select>`).join("");
+      document.getElementById("playerRooms").appendChild(div);
+    }
+
+    function addCoachRoom() {
+      let div = document.createElement("div");
+      let coaches = Array.from(document.querySelectorAll("#coachList li")).map(li => li.textContent);
+      div.innerHTML = `<p>Trenerrom:</p>` + coaches.map(c => `<select><option>${c}</option></select>`).join("");
+      document.getElementById("coachRooms").appendChild(div);
+    }
+
+    function saveData() {
+      localStorage.setItem("norwayCupData", document.body.innerHTML);
+      alert("Oppsett lagret!");
+    }
+
+    function loadData() {
+      let data = localStorage.getItem("norwayCupData");
+      if (data) {
+        document.body.innerHTML = data;
+      }
+    }
+
+    updateHotel();
+    updateSummary();
+  </script>
+</body>
+</html>
